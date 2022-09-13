@@ -1,0 +1,30 @@
+SELECT ?item ?itemLabel 
+
+#concatenate the variables returning several strings as a result 
+(GROUP_CONCAT(DISTINCT ?genreLabel;separator=", ") AS ?genre)
+(GROUP_CONCAT(DISTINCT ?subjectLabel;separator=", ") AS ?subject)
+(GROUP_CONCAT(DISTINCT ?articleLabel;separator=", ") AS ?article)
+
+
+WHERE
+{
+  {?item wdt:P31 wd:Q11424; #selecting all the films...
+         wdt:P136 wd:Q1033891;
+         
+        #wdt:P495 wd:Q148; #whose country of origin is china
+        wdt:P577 ?date.} #returning the date of release
+  
+  OPTIONAL {?item wdt:P136 ?genre}.    #returning the genre of each film, when available
+  OPTIONAL {?item wdt:P921 ?subject}.  #returning the main subject of each film, when available
+  OPTIONAL {                           #returning the link to the chinese wikipedia webpage associated to each film
+       ?article schema:about ?item .
+       ?article schema:inLanguage "zh" .
+       ?article schema:isPartOf <https://zh.wikipedia.org/> .
+    }
+  SERVICE wikibase:label { bd:serviceParam wikibase:language "[AUTO_LANGUAGE]".
+                         ?item rdfs:label ?itemLabel.
+                         ?genre rdfs:label ?genreLabel.
+                         ?subject rdfs:label ?subjectLabel.
+                         ?article rdfs:label ?articleLabel.}
+
+} GROUP BY ?item ?itemLabel
